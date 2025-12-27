@@ -23,6 +23,34 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
   - General → `history/prompts/general/`
 - ADR suggestions: when an architecturally significant decision is detected, suggest: "📋 Architectural decision detected: <brief>. Document? Run `/sp.adr <title>`." Never auto‑create ADRs; require user consent.
 
+## Pre-Action Checklist (MANDATORY)
+
+**Before taking ANY action, you MUST:**
+
+1. **Check Available Skills** - Run `ls .claude/skills/` or check the Skill tool's Available Commands
+2. **Check Available Agents** - Run `ls .claude/agents/` or check the Task tool's available subagent_types
+3. **Match Task to Skill/Agent** - Determine if a skill or agent matches the user's request:
+
+| User Request Type | Check This First |
+|-------------------|------------------|
+| Constitution work | `constitution_creation` skill |
+| Feature specs | `spec_writing` skill |
+| Python CLI app | `python-console-agent` + `cli_interface_design` skill |
+| Next.js frontend | `nextjs-frontend-agent` |
+| FastAPI backend | `fastapi-backend-agent` |
+| Authentication | `authentication-agent` |
+| Data models | `data_validation` skill |
+| Storage classes | `in_memory_storage` skill |
+| Command patterns | `command_pattern_implementation` skill |
+| Project structure | `python_project_structure` or `spec_kit_structure` skill |
+
+4. **Invoke the Skill/Agent** - If a match exists, USE IT via the Skill or Task tool
+5. **Only proceed manually** if no skill/agent matches the task
+
+**Failure to check skills/agents before action is a violation of this project's guidelines.**
+
+---
+
 ## Development Guidelines
 
 ### 1. Authoritative Source Mandate:

@@ -4,6 +4,14 @@
 
 TaskFlow is an AI-powered todo application that evolves from a simple console app to a fully-featured, cloud-native AI chatbot deployed on Kubernetes. This project demonstrates mastery of Spec-Driven Development, AI-native architecture, and modern cloud technologies—all using **free-tier services**.
 
+**Problem Solved:** Managing personal tasks with natural language while learning progressive software architecture.
+
+**Team Context:** Solo developer (hackathon participant)
+
+**Development Philosophy:** Spec-Driven, AI-First, Test-First
+
+---
+
 ## Core Principles
 
 ### I. Spec-Driven Development (Non-Negotiable)
@@ -18,6 +26,10 @@ Every feature MUST begin with a specification before implementation.
 
 **Rationale:** Spec-driven development ensures clear requirements, reproducible AI-generated code, and traceable implementation decisions. This is the foundation of the hackathon methodology.
 
+**Verification:** Check that `specs/<feature>/spec.md` exists before any implementation PR.
+
+---
+
 ### II. AI-First Development
 
 Leverage AI assistance (Claude Code) throughout the entire development lifecycle.
@@ -27,8 +39,13 @@ Leverage AI assistance (Claude Code) throughout the entire development lifecycle
 - Maintain clear context through CLAUDE.md files at each project level
 - All AI interactions must be recorded in Prompt History Records (PHRs)
 - Verify AI outputs against specifications before acceptance
+- **Always check available skills/agents before any action** (see CLAUDE.md Pre-Action Checklist)
 
 **Rationale:** AI-first development maximizes productivity and demonstrates the "Architecture of Intelligence" theme. The developer acts as System Architect, not syntax writer.
+
+**Verification:** PHR files exist in `history/prompts/` for all significant work.
+
+---
 
 ### III. Test-First (TDD Mandatory)
 
@@ -42,6 +59,10 @@ Tests MUST be written before implementation code.
 
 **Rationale:** TDD ensures correctness, prevents regressions, and produces self-documenting code. Critical for multi-phase evolution where each phase builds on previous work.
 
+**Verification:** CI pipeline enforces coverage thresholds; PRs require passing tests.
+
+---
+
 ### IV. Free-Tier First
 
 All external services MUST use free-tier offerings that do not require payment.
@@ -53,6 +74,10 @@ All external services MUST use free-tier offerings that do not require payment.
 - Maintain list of alternative free services as fallbacks
 
 **Rationale:** Demonstrates practical skills accessible to all developers. Ensures the project can be reproduced without financial barriers.
+
+**Verification:** No paid service keys in `.env`; all services documented in Technology Stack with free tier limits.
+
+---
 
 ### V. Progressive Architecture
 
@@ -66,6 +91,10 @@ The application MUST evolve through 5 defined phases without breaking previous f
 
 **Rationale:** Simulates real-world software evolution from MVP to production-grade distributed system.
 
+**Verification:** All Phase N features still work after Phase N+1 implementation.
+
+---
+
 ### VI. Stateless & Cloud-Native Design
 
 All services MUST be designed for horizontal scalability and resilience.
@@ -78,6 +107,10 @@ All services MUST be designed for horizontal scalability and resilience.
 
 **Rationale:** Cloud-native design enables the Kubernetes deployment phases and teaches production-ready architecture patterns.
 
+**Verification:** Server restart doesn't lose any user data; multiple instances can run concurrently.
+
+---
+
 ### VII. Simplicity & YAGNI
 
 Implement only what is specified—no premature optimization or feature creep.
@@ -89,6 +122,10 @@ Implement only what is specified—no premature optimization or feature creep.
 - Remove unused code immediately
 
 **Rationale:** Complexity must be justified. The hackathon evaluates spec compliance, not additional features.
+
+**Verification:** Code review checks for unused imports, dead code, and unjustified abstractions.
+
+---
 
 ## Technology Stack
 
@@ -142,14 +179,18 @@ Implement only what is specified—no premature optimization or feature creep.
 | Runtime | Dapr | Distributed app building blocks | Open source |
 | CI/CD | GitHub Actions | Automated deployment pipeline | 2000 mins/mo free |
 
+---
+
 ## Development Constraints
 
 ### Mandatory Tooling
 
-- **Claude Code**: All implementation via AI assistant
-- **Spec-Kit Plus**: Specification management and workflow
-- **UV**: Python package management (not pip)
-- **Git**: Version control with meaningful commits
+| Tool | Purpose | Required |
+|------|---------|----------|
+| Claude Code | All implementation via AI assistant | Yes |
+| Spec-Kit Plus | Specification management and workflow | Yes |
+| UV | Python package management (not pip) | Yes |
+| Git | Version control with meaningful commits | Yes |
 
 ### Code Organization
 
@@ -157,6 +198,9 @@ Implement only what is specified—no premature optimization or feature creep.
 taskflow/
 ├── .specify/                 # Spec-Kit configuration
 │   └── memory/constitution.md
+├── .claude/                  # Claude Code configuration
+│   ├── agents/               # Specialized AI agents
+│   └── skills/               # Reusable AI skills
 ├── specs/                    # Feature specifications
 │   ├── features/
 │   ├── api/
@@ -188,6 +232,8 @@ taskflow/
 - JWT tokens with expiration (7 days default)
 - HTTPS only in production
 
+---
+
 ## Quality Standards
 
 ### Code Quality
@@ -200,12 +246,12 @@ taskflow/
 
 ### Testing Requirements
 
-| Test Type | Requirement |
-|-----------|-------------|
-| Unit Tests | 80% coverage minimum for business logic |
-| Integration Tests | All API endpoints covered |
-| E2E Tests | Critical user journeys (Phase II+) |
-| Contract Tests | MCP tool interfaces (Phase III+) |
+| Test Type | Requirement | Phase |
+|-----------|-------------|-------|
+| Unit Tests | 80% coverage minimum for business logic | All |
+| Integration Tests | All API endpoints covered | II+ |
+| E2E Tests | Critical user journeys | II+ |
+| Contract Tests | MCP tool interfaces | III+ |
 
 ### Documentation Requirements
 
@@ -221,55 +267,76 @@ taskflow/
 - ADR suggested for architectural decisions
 - No merging without passing CI checks
 
-## Feature Requirements by Phase
+---
+
+## Success Criteria
 
 ### Phase I: Basic Level (100 points)
 
-- [ ] Add Task (title, description)
-- [ ] Delete Task (by ID)
-- [ ] Update Task (modify details)
-- [ ] View Task List (all tasks with status)
-- [ ] Mark as Complete (toggle status)
+| Feature | Acceptance Criteria | Status |
+|---------|---------------------|--------|
+| Add Task | User can create task with title and description | [ ] |
+| Delete Task | User can remove task by ID | [ ] |
+| Update Task | User can modify existing task details | [ ] |
+| View Task List | User can see all tasks with status indicators | [ ] |
+| Mark as Complete | User can toggle task completion status | [ ] |
 
 ### Phase II: Basic Level Web (150 points)
 
-- [ ] All Phase I features as web app
-- [ ] User authentication (signup/signin)
-- [ ] RESTful API endpoints
-- [ ] Responsive frontend UI
-- [ ] Persistent database storage
+| Feature | Acceptance Criteria | Status |
+|---------|---------------------|--------|
+| Web CRUD | All Phase I features work via web UI | [ ] |
+| Authentication | User can signup/signin with Better Auth | [ ] |
+| REST API | All endpoints return proper JSON responses | [ ] |
+| Responsive UI | Works on mobile and desktop | [ ] |
+| Database | Tasks persist across server restarts | [ ] |
 
 ### Phase III: AI Chatbot (200 points)
 
-- [ ] Conversational interface for all features
-- [ ] MCP Server with 5 tools (add, list, complete, delete, update)
-- [ ] Conversation state persistence
-- [ ] Natural language understanding
-- [ ] Stateless server architecture
+| Feature | Acceptance Criteria | Status |
+|---------|---------------------|--------|
+| Natural Language | User can add/view/update/delete tasks via chat | [ ] |
+| MCP Tools | 5 tools exposed (add, list, complete, delete, update) | [ ] |
+| Conversation State | Chat history persists in database | [ ] |
+| Stateless Server | Server restart doesn't break conversations | [ ] |
 
 ### Phase IV: Local K8s (250 points)
 
-- [ ] Containerized frontend and backend
-- [ ] Helm charts for deployment
-- [ ] Minikube deployment working
-- [ ] AI-assisted operations (kubectl-ai)
+| Feature | Acceptance Criteria | Status |
+|---------|---------------------|--------|
+| Containerization | Frontend and backend have working Dockerfiles | [ ] |
+| Helm Charts | Deployable via `helm install` | [ ] |
+| Minikube | Full app runs on local Minikube | [ ] |
+| AI DevOps | kubectl-ai used for at least one operation | [ ] |
 
 ### Phase V: Cloud + Advanced (300 points)
 
-- [ ] Oracle OKE deployment
-- [ ] Kafka/Redpanda event streaming
-- [ ] Dapr integration (Pub/Sub, State, Bindings)
-- [ ] Intermediate features (priorities, tags, search, filter, sort)
-- [ ] Advanced features (recurring tasks, due dates, reminders)
-- [ ] CI/CD pipeline with GitHub Actions
+| Feature | Acceptance Criteria | Status |
+|---------|---------------------|--------|
+| Oracle OKE | App deployed and accessible on cloud | [ ] |
+| Event Streaming | Kafka/Redpanda handles task events | [ ] |
+| Dapr | Pub/Sub and State management working | [ ] |
+| Intermediate Features | Priorities, tags, search, filter, sort | [ ] |
+| Advanced Features | Recurring tasks, due dates, reminders | [ ] |
+| CI/CD | GitHub Actions deploys on push to main | [ ] |
+
+---
 
 ## Governance
 
 - This Constitution supersedes all other project documentation
 - Amendments require: documented rationale in ADR, version bump, migration plan
 - All implementations must verify compliance with Core Principles
-- Exceptions require explicit documentation with justification
+- Exceptions require explicit documentation and approval
 - Use CLAUDE.md for runtime development guidance
+
+### Document Hierarchy
+
+```
+Constitution (WHY) > Specify (WHAT) > Plan (HOW) > Tasks (DO)
+```
+
+If conflicts arise, higher-level documents take precedence.
 
 ### Version Control
 
@@ -280,10 +347,20 @@ taskflow/
 ### Compliance Verification
 
 Every PR/implementation must answer:
+
 1. Does this follow Spec-Driven Development? (Principle I)
 2. Was this generated via AI assistance? (Principle II)
 3. Were tests written first? (Principle III)
 4. Does this use free-tier services only? (Principle IV)
 5. Does this maintain backward compatibility? (Principle V)
+6. Is the server stateless? (Principle VI)
+7. Is this the simplest solution? (Principle VII)
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27
+---
+
+**Version**: 1.1.0 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27
+
+### Changelog
+
+- **1.1.0** (2025-12-27): Added Success Criteria section, Verification methods for each principle, Document Hierarchy, enhanced formatting per constitution_creation skill guidelines
+- **1.0.0** (2025-12-27): Initial constitution created with 7 core principles, technology stack, quality standards, and governance
