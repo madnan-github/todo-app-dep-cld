@@ -1,0 +1,607 @@
+openapi: 3.0.3
+info:
+  title: TaskFlow API
+  description: |
+    REST API for the TaskFlow full-stack todo application (Phase II).
+
+    **Authentication**: All endpoints (except auth) require JWT Bearer token in Authorization header.
+
+    **User Isolation**: All endpoints verify that the `user_id` in the URL matches the authenticated user from the JWT token. Attempting to access another user's resources returns 403 Forbidden.
+
+    **Base URL**: `http://localhost:8000` (development) or `https://api.yourdomain.com` (production)
+  version: 1.0.0
+  contact:
+    name: TaskFlow API Support
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.yourdomain.com
+    description: Production server (Railway/Render)
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints (Better Auth integration)
+  - name: Tasks
+    description: Task CRUD operations with filtering, sorting, and search
+  - name: Tags
+    description: Tag management and autocomplete
+
+paths:
+  # ============================================================================
+  # Authentication Endpoints
+  # ============================================================================
+
+  /api/auth/signup:
+    post:
+      tags: [Authentication]
+      summary: Create new user account
+      description: Register a new user with email and password. Returns JWT token for immediate signin.
+      security: []  # No auth required for signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePass123
+                name:
+                  type: string
+                  example: John Doe
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  accessToken:
+                    type: string
+                    description: JWT token for API authentication
+        '400':
+          description: Invalid input (email format, password length, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/signin:
+    post:
+      tags: [Authentication]
+      summary: Sign in with email and password
+      description: Authenticate user and receive JWT token for API access.
+      security: []  # No auth required for signin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123
+      responses:
+        '200':
+          description: Signin successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  accessToken:
+                    type: string
+                    description: JWT token (valid for 7 days)
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # Task Endpoints
+  # ============================================================================
+
+  /api/{user_id}/tasks:
+    get:
+      tags: [Tasks]
+      summary: List all tasks for user
+      description: |
+        Retrieve all tasks for the authenticated user with optional filtering, searching, and sorting.
+
+        **Filters** (combined with AND logic):
+        - `status`: Filter by completion status
+        - `priority`: Filter by one or more priority levels (comma-separated)
+        - `tags`: Filter by one or more tag names (comma-separated)
+        - `search`: Search in title or description (case-insensitive)
+
+        **Sorting**:
+        - `sort_by`: Field to sort by (created_at, priority, title)
+        - `sort_order`: Sort direction (asc, desc)
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, pending, completed]
+            default: all
+          description: Filter by completion status
+        - name: priority
+          in: query
+          schema:
+            type: string
+            pattern: ^(high|medium|low)(,(high|medium|low))*$
+          description: Filter by priority (comma-separated for multiple)
+          example: high,medium
+        - name: tags
+          in: query
+          schema:
+            type: string
+          description: Filter by tag names (comma-separated)
+          example: work,urgent
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search keyword in title or description
+          example: meeting
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, priority, title]
+            default: created_at
+          description: Field to sort by
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+      responses:
+        '200':
+          description: List of tasks (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Tasks]
+      summary: Create a new task
+      description: Create a new task for the authenticated user with optional priority and tags.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input (title empty, description too long, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/{user_id}/tasks/{task_id}:
+    get:
+      tags: [Tasks]
+      summary: Get task details
+      description: Retrieve a single task by ID with all associated tags.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Task found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags: [Tasks]
+      summary: Update task
+      description: Update task title, description, priority, and/or tags. All fields are optional.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input (empty title, invalid priority, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags: [Tasks]
+      summary: Delete task
+      description: Permanently delete a task and all its tag associations.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '204':
+          description: Task deleted successfully (no content)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/{user_id}/tasks/{task_id}/complete:
+    patch:
+      tags: [Tasks]
+      summary: Toggle task completion status
+      description: Toggle the completed flag (true ↔ false). Returns the updated task.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Task completion status toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # Tag Endpoints
+  # ============================================================================
+
+  /api/{user_id}/tags:
+    get:
+      tags: [Tags]
+      summary: List all user tags
+      description: Retrieve all unique tags used by the authenticated user, sorted alphabetically.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: List of tags (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/{user_id}/tags/autocomplete:
+    get:
+      tags: [Tags]
+      summary: Tag autocomplete suggestions
+      description: |
+        Search for tags matching a prefix query. Returns up to 10 suggestions for autocomplete.
+        Only searches tags that have been used by the authenticated user.
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search query (prefix matching)
+          example: wo
+      responses:
+        '200':
+          description: List of matching tag names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["work", "workout", "workshop"]
+        '400':
+          description: Missing or invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+# ==============================================================================
+# Reusable Components
+# ==============================================================================
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from `/api/auth/signup` or `/api/auth/signin`.
+        Include in header as: `Authorization: Bearer <token>`
+
+  parameters:
+    userId:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: User ID (must match authenticated user from JWT token)
+      example: abc123
+
+    taskId:
+      name: task_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Task ID
+      example: 42
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+          example: abc123
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          nullable: true
+          example: John Doe
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-12-28T10:00:00Z"
+      required: [id, email, created_at]
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique task identifier
+          example: 42
+        user_id:
+          type: string
+          description: Owner user ID
+          example: abc123
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Complete project documentation"
+        description:
+          type: string
+          nullable: true
+          maxLength: 1000
+          example: "Write comprehensive docs for Phase II implementation"
+        completed:
+          type: boolean
+          example: false
+        priority:
+          type: string
+          enum: [high, medium, low]
+          example: high
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Associated tags
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-12-28T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-12-28T11:30:00Z"
+      required: [id, user_id, title, completed, priority, tags, created_at, updated_at]
+
+    TaskCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Complete project documentation"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Write comprehensive docs for Phase II"
+        priority:
+          type: string
+          enum: [high, medium, low]
+          default: medium
+          example: high
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tag names to associate with task
+          example: ["work", "urgent"]
+      required: [title]
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Updated task title"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Updated description"
+        priority:
+          type: string
+          enum: [high, medium, low]
+          example: medium
+        tags:
+          type: array
+          items:
+            type: string
+          description: Complete list of tags (replaces existing tags)
+          example: ["work", "important"]
+      description: All fields are optional. Only provided fields will be updated.
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique tag identifier
+          example: 5
+        name:
+          type: string
+          maxLength: 50
+          example: work
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-12-28T10:00:00Z"
+      required: [id, name, created_at]
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+          example: Invalid input: title cannot be empty
+        code:
+          type: string
+          description: Machine-readable error code (optional)
+          example: INVALID_INPUT
+      required: [detail]
+
+  responses:
+    Unauthorized:
+      description: Authentication required or token invalid/expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Could not validate credentials"
+
+    Forbidden:
+      description: User ID in URL does not match authenticated user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            detail: "Forbidden: cannot access another user's resources"
