@@ -7,9 +7,18 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, text
 from src.config import settings
+import os
 
 # Neon PostgreSQL connection optimization
 # Reference: https://neon.com/docs/connect/connection-pooling
+
+# DEBUG: Check environment variables directly
+print("[DATABASE] ===== ENVIRONMENT VARIABLE DEBUG =====", flush=True)
+print(f"[DATABASE] DATABASE_URL env var: {os.environ.get('DATABASE_URL', 'NOT SET')[:60] if os.environ.get('DATABASE_URL') else 'NOT SET'}...", flush=True)
+print(f"[DATABASE] ENVIRONMENT env var: {os.environ.get('ENVIRONMENT', 'NOT SET')}", flush=True)
+print(f"[DATABASE] PORT env var: {os.environ.get('PORT', 'NOT SET')}", flush=True)
+print(f"[DATABASE] All env vars starting with DATABASE: {[k for k in os.environ.keys() if 'DATABASE' in k.upper()]}", flush=True)
+print("[DATABASE] =========================================", flush=True)
 
 # Transform connection string for asyncpg if needed
 # Strip whitespace and newlines that may have been copied from Railway
