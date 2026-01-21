@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 from contextlib import asynccontextmanager
+from datetime import datetime
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -62,6 +63,8 @@ app = FastAPI(
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",")]
 if "http://localhost:3000" not in cors_origins:
     cors_origins.append("http://localhost:3000")
+if "http://frontend:3000" not in cors_origins:
+    cors_origins.append("http://frontend:3000")
 
 app.add_middleware(
     CORSMiddleware,
@@ -100,10 +103,10 @@ async def rate_limit_middleware(request: Request, call_next):
     return response
 
 
-# Health check endpoint
+# Health check endpoints
 @app.get("/health")
-async def health_check():
-    """Health check endpoint with database verification."""
+async def health_check_legacy():
+    """Legacy health check endpoint with database verification."""
     db_status = "disconnected"
     try:
         # Verify database connection
@@ -118,6 +121,39 @@ async def health_check():
         "database": db_status,
         "environment": settings.environment
     }
+
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint with database verification for Kubernetes."""
+    # For basic health, we just need to verify the service is running
+    # Database connectivity is optional for basic health status
+    db_status = "disconnected"
+    try:
+        # Verify database connection
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        print(f"Database health check failed: {e}")
+        # Don't treat database disconnection as fatal for health check
+
+    health_status = {
+        "status": "healthy",  # Service is running
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "service": "backend",
+        "version": "1.0.0",
+        "database": db_status,
+        "environment": settings.environment
+    }
+
+    # Return 503 only if you want strict database connectivity check
+    # For basic readiness, we'll return 200 to indicate service is running
+    # You can uncomment the next lines if strict DB check is needed
+    # if db_status == "disconnected":
+    #     return JSONResponse(content=health_status, status_code=503)
+
+    return health_status
 
 
 @app.get("/")

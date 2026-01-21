@@ -127,6 +127,24 @@ Implement only what is specified—no premature optimization or feature creep.
 
 ---
 
+### VIII. Containerization & K8s Principles
+
+**Guidelines:**
+- Multi-stage Docker builds for smaller images
+- Non-root users in containers for security
+- Health checks (liveness/readiness) required for all services
+- Resource limits defined (CPU/memory)
+- Use AI DevOps tools (Gordon, kubectl-ai, kagent) when available
+- Helm charts must support both local (Minikube) and cloud deployment
+- ConfigMaps for configuration, Secrets for sensitive data
+- All container images tagged with version numbers
+
+**Rationale:** Cloud-native design requires proper containerization and orchestration from the start.
+
+**Verification:** All Dockerfiles pass security scans; K8s pods have health checks.
+
+---
+
 ## Technology Stack
 
 ### Phase I: Console Application
@@ -163,11 +181,12 @@ Implement only what is specified—no premature optimization or feature creep.
 
 | Layer | Technology | Justification | Free Tier |
 |-------|------------|---------------|-----------|
-| Containerization | Docker | Industry standard | Docker Desktop free |
+| Container Runtime | Docker Desktop | Industry standard | Free |
+| Docker AI | Gordon (optional) | AI-assisted Dockerfile generation | Docker Desktop beta |
 | Local K8s | Minikube | Full K8s locally | Open source |
-| Package Manager | Helm Charts | K8s application packaging | Open source |
-| AI DevOps | kubectl-ai, kagent | AI-assisted K8s operations | Open source |
-| Docker AI | Gordon (if available) | AI-assisted Docker operations | Docker Desktop feature |
+| Package Manager | Helm 3 | K8s application packaging | Open source |
+| AI DevOps | kubectl-ai | Natural language K8s operations | npm package |
+| AI DevOps | kagent | Advanced cluster analysis | Open source |
 
 ### Phase V: Cloud Deployment
 
@@ -215,6 +234,29 @@ taskflow/
 ├── helm/                     # Kubernetes charts
 └── dapr/                     # Dapr components
 ```
+
+### Kubernetes Standards
+
+**All deployments must have:**
+- Resource requests and limits
+- Liveness and readiness probes
+- Proper labels and selectors
+- Rolling update strategy
+
+### Helm Chart Standards
+
+**Values.yaml must support:**
+- Multiple environments (local/cloud)
+- Image tag overrides
+- Resource customization
+- Feature toggles
+
+### AI DevOps Usage
+
+- Use Gordon for Dockerfile generation when available
+- Use kubectl-ai for exploratory operations
+- Use kagent for cluster health analysis
+- Document all AI-generated K8s YAML in PHRs
 
 ### API Design Standards
 
@@ -360,10 +402,11 @@ Every PR/implementation must answer:
 
 ---
 
-**Version**: 1.2.0 | **Ratified**: 2025-12-27 | **Last Amended**: 2025-12-27
+**Version**: 1.3.0 | **Ratified**: 2025-12-27 | **Last Amended**: 2026-01-20
 
 ### Changelog
 
+- **1.3.0** (2026-01-20): Added VIII. Containerization & K8s Principles, updated Technology Stack for Phase IV, added Kubernetes Standards, Helm Chart Standards, and AI DevOps Usage to Development Constraints
 - **1.2.0** (2025-12-27): Phase I Complete - All 5 features implemented with 179 tests passing, PR #1 merged
 - **1.1.0** (2025-12-27): Added Success Criteria section, Verification methods for each principle, Document Hierarchy, enhanced formatting per constitution_creation skill guidelines
 - **1.0.0** (2025-12-27): Initial constitution created with 7 core principles, technology stack, quality standards, and governance
