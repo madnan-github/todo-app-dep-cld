@@ -1,0 +1,97 @@
+# API Contract: Health Check Endpoints
+
+## Overview
+This document defines the API contracts for health check endpoints required for Kubernetes liveness and readiness probes.
+
+## Frontend Health Check Endpoint
+
+### Endpoint: `GET /health`
+**Purpose:** Verify frontend service is operational and responding to requests.
+
+#### Request
+- Method: `GET`
+- Path: `/health`
+- Headers: None required
+- Query Parameters: None
+- Request Body: None
+
+#### Response
+- Success Response: `200 OK`
+  - Content-Type: `application/json`
+  - Body:
+    ```json
+    {
+      "status": "healthy",
+      "timestamp": "2026-01-20T15:30:00Z",
+      "service": "frontend",
+      "version": "0.1.0"
+    }
+    ```
+- Error Responses:
+  - `503 Service Unavailable` if the service is not ready
+
+#### Implementation Notes
+- Should respond quickly (under 2 seconds as per spec)
+- Should verify the web server is operational
+- Should not perform heavy computations
+
+## Backend Health Check Endpoint
+
+### Endpoint: `GET /api/health`
+**Purpose:** Verify backend service is operational and its dependencies are accessible.
+
+#### Request
+- Method: `GET`
+- Path: `/api/health`
+- Headers: None required
+- Query Parameters: None
+- Request Body: None
+
+#### Response
+- Success Response: `200 OK`
+  - Content-Type: `application/json`
+  - Body:
+    ```json
+    {
+      "status": "healthy",
+      "timestamp": "2026-01-20T15:30:00Z",
+      "service": "backend",
+      "version": "0.1.0",
+      "checks": {
+        "database": "connected",
+        "external_apis": "accessible"
+      }
+    }
+    ```
+- Error Responses:
+  - `503 Service Unavailable` if the service or dependencies are not healthy
+
+#### Implementation Notes
+- Should verify database connectivity if applicable
+- Should respond quickly (under 2 seconds as per spec)
+- Should not perform heavy database operations
+
+## Health Check Standards Compliance
+
+### Kubernetes Probe Configuration
+Based on these endpoints, the following Kubernetes probe configurations should be used:
+
+#### Liveness Probe
+- Initial delay: 30 seconds
+- Period: 10 seconds
+- Timeout: 5 seconds
+- Success threshold: 1
+- Failure threshold: 3
+
+#### Readiness Probe
+- Initial delay: 5 seconds
+- Period: 5 seconds
+- Timeout: 3 seconds
+- Success threshold: 1
+- Failure threshold: 2
+
+## Implementation Requirements
+- Endpoints must return HTTP 200 status when service is healthy
+- Response time must be under 2 seconds (as specified in feature requirements)
+- Endpoints should be secured and not expose sensitive information
+- Should be available even when other parts of the application are experiencing issues

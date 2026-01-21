@@ -47,8 +47,12 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 | Database setup | `database_connection_setup` skill |
 | Protected routes | `protected_route_implementation` skill |
 | Backend deployment | `backend-deployment-agent` |
+| Containerization | `@agents/docker-agent.md` + `dockerfile_builder` skill |
+| Helm charts | `@agents/helm-agent.md` + `helm_chart_builder` skill |
+| Kubernetes deployment | `@agents/kubernetes-agent.md` + `k8s_manifest_builder` skill |
+| AI DevOps | `@agents/devops-agent.md` + `kubectl_ai_wrapper` skill |
 
-## Available Skills (25 Total)
+## Available Skills (32 Total)
 
 ### Phase I Skills (Python CLI)
 1. `python_project_structure` - Python 3.13+ project setup with UV
@@ -81,13 +85,22 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 20. `neon_production_setup` - Optimized connection pooling for Neon serverless DB
 21. `fastapi_production_config` - CORS, health checks, and production security settings
 
-### Universal Skills
-22. `constitution_creation` - Project constitution with principles
-23. `spec_writing` - Feature specifications with user stories
-24. `spec_kit_structure` - Spec-Kit Plus folder structure
-25. `claude_md_generation` - CLAUDE.md generation for projects
+### Phase IV Skills (Kubernetes & Containerization)
+22. `dockerfile_builder` - Multi-stage Dockerfile creation
+23. `health_check_builder` - Health endpoint implementation
+24. `helm_chart_builder` - Helm chart scaffolding
+25. `k8s_manifest_builder` - K8s YAML generation
+26. `minikube_deployer` - Local deployment automation
+27. `kubectl_ai_wrapper` - Natural language K8s operations
+28. `image_optimizer` - Docker image optimization
 
-## Available Agents (6 Total)
+### Universal Skills
+29. `constitution_creation` - Project constitution with principles
+30. `spec_writing` - Feature specifications with user stories
+31. `spec_kit_structure` - Spec-Kit Plus folder structure
+32. `claude_md_generation` - CLAUDE.md generation for projects
+
+## Available Agents (10 Total)
 
 1. `python-console-agent` - Python CLI applications (Phase I)
 2. `nextjs-frontend-agent` - Next.js frontend development (Phase II+)
@@ -95,11 +108,56 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 4. `authentication-agent` - Better Auth + JWT authentication (Phase II+)
 5. `spec-driven-dev` - Spec-Driven Development workflow
 6. `backend-deployment-agent` - Railway + Neon deployment orchestration (Root level)
+7. `@agents/docker-agent.md` - Docker containerization expert
+8. `@agents/helm-agent.md` - Helm chart specialist
+9. `@agents/kubernetes-agent.md` - K8s deployment expert
+10. `@agents/devops-agent.md` - AI DevOps orchestrator
 
 4. **Invoke the Skill/Agent** - If a match exists, USE IT via the Skill or Task tool
 5. **Only proceed manually** if no skill/agent matches the task
 
 **Failure to check skills/agents before action is a violation of this project's guidelines.**
+
+---
+
+# TaskFlow - Phase IV Context
+
+## Available Agents
+- @agents/docker-agent.md - Docker containerization expert
+- @agents/helm-agent.md - Helm chart specialist
+- @agents/kubernetes-agent.md - K8s deployment expert
+- @agents/devops-agent.md - AI DevOps orchestrator
+
+## Available Skills
+- @skills/dockerfile-builder.md - Multi-stage Dockerfile creation
+- @skills/health-check-builder.md - Health endpoint implementation
+- @skills/helm-chart-builder.md - Helm chart scaffolding
+- @skills/k8s-manifest-builder.md - K8s YAML generation
+- @skills/minikube-deployer.md - Local deployment automation
+- @skills/kubectl-ai-wrapper.md - Natural language K8s ops
+- @skills/image-optimizer.md - Docker image optimization
+
+## Phase IV Workflow
+Follow @workflows/phase-iv-deployment.md for complete orchestration.
+
+## Pre-Action Checklist
+Before ANY action:
+1. Check if an agent exists for this task
+2. Check if a skill can help
+3. Reference the spec: @specs/features/[feature].md
+4. Use AI tools: Gordon, kubectl-ai, kagent
+5. Document in PHR
+
+## Usage Examples
+
+### Containerization
+"Activate @agents/docker-agent.md and create Dockerfiles for frontend and backend using @skills/dockerfile-builder.md"
+
+### Helm Charts
+"Activate @agents/helm-agent.md and generate Helm chart using @skills/helm-chart-builder.md"
+
+### Deployment
+"Activate @agents/kubernetes-agent.md and deploy to Minikube using @skills/minikube-deployer.md"
 
 ---
 
@@ -293,6 +351,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - Neon PostgreSQL (serverless, asyncpg driver) (004-backend-deployment)
 - Python 3.13+ (per constitution) + FastAPI, SQLModel, OpenAI Agents SDK, OpenRouter API, Better Auth, Neon PostgreSQL (005-todo-ai-chatbot)
 - PostgreSQL (Neon) with 3 tables (Task, Conversation, Message) (005-todo-ai-chatbot)
+- Python 3.13 (backend), JavaScript/TypeScript (frontend) + Docker Engine, Dockerfile best practices, multi-stage build patterns (006-docker-containerization)
+- N/A (this feature adds containerization, not storage) (006-docker-containerization)
 
 ### Phase I (Console App) - Completed
 - Python 3.13+
