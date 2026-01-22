@@ -1,0 +1,17 @@
+apiVersion: v2
+name: todo-app
+description: A Helm chart for the TodoFlow application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - todo
+  - task management
+  - productivity
+  - fullstack
+home: https://github.com/madnan-github/todo-app
+sources:
+  - https://github.com/madnan-github/todo-app
+maintainers:
+  - name: TodoFlow Team
+    email: team@todo-flow.com
