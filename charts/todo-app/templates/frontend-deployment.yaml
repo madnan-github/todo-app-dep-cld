@@ -13,28 +13,54 @@ spec:
       app: frontend
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "todo-app.selectorLabels" . | nindent 8 }}
         app: frontend
     spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.global.imageRegistry }}{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.frontend.service.port }}
           env:
             - name: NODE_ENV
-              value: {{ .Values.global.environment | default "production" | quote }}
+              value: {{ .Values.global.environment | quote }}
             - name: NEXT_PUBLIC_API_URL
-              value: {{ default (printf "http://%s-backend:%v" (include "todo-app.fullname" .) .Values.backend.service.port) .Values.backend.api.url | quote }}
+              value: {{ .Values.backend.api.url | default (printf "http://%s-backend:%v" (include "todo-app.fullname" .) .Values.backend.service.port) | quote }}
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: {{ .Values.frontend.healthPath }}
               port: {{ .Values.frontend.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: {{ .Values.frontend.healthPath }}
               port: {{ .Values.frontend.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      {{- with .Values.frontend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

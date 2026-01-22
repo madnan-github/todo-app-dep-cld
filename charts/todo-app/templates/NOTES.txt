@@ -11,20 +11,28 @@ The TodoFlow application has been deployed with the following components:
 - Frontend service: {{ include "todo-app.fullname" . }}-frontend
 - Backend service: {{ include "todo-app.fullname" . }}-backend
 - ConfigMap: {{ include "todo-app.fullname" . }}-config
+- Secret: {{ include "todo-app.fullname" . }}-db-secret
 
-{{- if .Values.global.ingress.enabled }}
-Access the application by visiting:
-{{- range $host := .Values.global.ingress.hosts }}
-  {{- range .paths }}
-  - http{{ if $.Values.global.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
-  {{- end }}
-{{- end }}
-{{- else }}
+{{- if eq .Values.frontend.service.type "NodePort" }}
+Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "todo-app.fullname" . }}-frontend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.frontend.service.type "ClusterIP" }}
 Get the application URL by running these commands:
   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "todo-app.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
   export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- else if eq .Values.frontend.service.type "LoadBalancer" }}
+Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "todo-app.fullname" . }}-frontend'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "todo-app.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.frontend.service.port }}
+{{- else if eq .Values.frontend.service.type "ExternalName" }}
+The service type is ExternalName, the application is accessible via the external name:
+  {{ .Values.frontend.service.externalName }}
 {{- end }}
 
 For more information on the TodoFlow application, visit:

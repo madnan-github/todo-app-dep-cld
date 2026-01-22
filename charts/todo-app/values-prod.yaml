@@ -1,0 +1,83 @@
+# Production values for TodoFlow application
+
+frontend:
+  image:
+    repository: todo-frontend
+    tag: "1.0.0"  # Pin to specific version for production
+    pullPolicy: Always  # Always pull latest image
+  replicas: 3  # Multiple replicas for availability
+  service:
+    type: LoadBalancer  # Use LoadBalancer for production
+    port: 80  # Common web port
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  # Health check configuration
+  healthPath: /api/health
+
+backend:
+  image:
+    repository: todo-backend
+    tag: "1.0.0"  # Pin to specific version for production
+    pullPolicy: Always  # Always pull latest image
+  replicas: 3  # Multiple replicas for availability
+  service:
+    type: ClusterIP  # Internal service only
+    port: 80  # Common web port
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  # Backend-specific configurations
+  api:
+    url: ""
+  cors:
+    origins: "https://mydomain.com"
+  debug: "false"
+  # Health check configuration
+  healthPath: /api/health
+
+database:
+  # Production database URL (should be configured separately via secrets)
+  url: "postgresql://prod-user:prod-password@prod-db:5432/prod-todo-app"
+
+global:
+  imageRegistry: ""  # Use default registry
+  environment: "production"
+  ingress:
+    enabled: true  # Enable ingress in production
+    className: "nginx"  # Use nginx ingress controller
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: todo.mydomain.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: todo-tls
+        hosts:
+          - todo.mydomain.com
+
+# Pod security context for production
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false  # Allow writes for temp files, logs, etc.
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL

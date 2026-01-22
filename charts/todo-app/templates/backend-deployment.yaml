@@ -13,36 +13,65 @@ spec:
       app: backend
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "todo-app.selectorLabels" . | nindent 8 }}
         app: backend
     spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: backend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.global.imageRegistry }}{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.backend.service.port }}
           env:
             - name: DATABASE_URL
-              value: {{ .Values.database.url | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todo-app.fullname" . }}-db-secret
+                  key: database_url
             - name: API_HOST
               value: "0.0.0.0"
             - name: API_PORT
               value: {{ .Values.backend.service.port | quote }}
             - name: CORS_ORIGINS
-              value: {{ .Values.backend.cors.origins | default "http://localhost:3000" | quote }}
+              value: {{ .Values.backend.cors.origins | quote }}
             - name: DEBUG
-              value: {{ .Values.backend.debug | default "false" | quote }}
+              value: {{ .Values.backend.debug | quote }}
             - name: ENVIRONMENT
-              value: {{ .Values.global.environment | default "development" | quote }}
+              value: {{ .Values.global.environment | quote }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: {{ .Values.backend.healthPath }}
               port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: {{ .Values.backend.healthPath }}
               port: {{ .Values.backend.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

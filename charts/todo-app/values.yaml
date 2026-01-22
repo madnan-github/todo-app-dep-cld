@@ -14,7 +14,7 @@ frontend:
     pullPolicy: IfNotPresent
   replicas: 1
   service:
-    type: ClusterIP
+    type: NodePort
     port: 3000
   resources:
     limits:

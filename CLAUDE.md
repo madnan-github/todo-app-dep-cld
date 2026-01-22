@@ -353,6 +353,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - PostgreSQL (Neon) with 3 tables (Task, Conversation, Message) (005-todo-ai-chatbot)
 - Python 3.13 (backend), JavaScript/TypeScript (frontend) + Docker Engine, Dockerfile best practices, multi-stage build patterns (006-docker-containerization)
 - N/A (this feature adds containerization, not storage) (006-docker-containerization)
+- N/A (Infrastructure as Code) + Helm 3, Minikube, Docker, Kubernetes (008-kubernetes-deployment)
+- N/A (Infrastructure deployment) (008-kubernetes-deployment)
 
 ### Phase I (Console App) - Completed
 - Python 3.13+

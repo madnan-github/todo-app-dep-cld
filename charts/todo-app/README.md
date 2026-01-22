@@ -1,6 +1,6 @@
 # TodoFlow Helm Chart
 
-A Helm chart for deploying the TodoFlow application, which consists of a Next.js frontend and a FastAPI backend.
+A Helm chart for deploying the TodoFlow application to Kubernetes.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ The following table lists the configurable parameters of the TodoFlow chart and 
 | `frontend.image.tag` | Frontend image tag | `"latest"` |
 | `frontend.image.pullPolicy` | Frontend image pull policy | `"IfNotPresent"` |
 | `frontend.replicas` | Number of frontend replicas | `1` |
-| `frontend.service.type` | Frontend service type | `"ClusterIP"` |
+| `frontend.service.type` | Frontend service type | `"NodePort"` |
 | `frontend.service.port` | Frontend service port | `3000` |
 | `frontend.healthPath` | Frontend health check path | `"/api/health"` |
 | `frontend.resources.limits.cpu` | CPU limit for frontend | `"500m"` |
@@ -92,82 +92,6 @@ The following table lists the configurable parameters of the TodoFlow chart and 
 | `podAnnotations` | Annotations for pods | `{}` |
 | `podSecurityContext` | Security context for pods | `{}` |
 | `securityContext` | Security context for containers | `{}` |
-
-## Example Values
-
-Here's an example `values.yaml` file for a production deployment:
-
-```yaml
-global:
-  environment: "production"
-  ingress:
-    enabled: true
-    className: "nginx"
-    hosts:
-      - host: "todo.example.com"
-        paths:
-          - path: "/"
-            pathType: "Prefix"
-
-frontend:
-  image:
-    tag: "v1.0.0"
-  replicas: 3
-  resources:
-    limits:
-      cpu: "1000m"
-      memory: "1Gi"
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
-
-backend:
-  image:
-    tag: "v1.0.0"
-  replicas: 2
-  resources:
-    limits:
-      cpu: "1000m"
-      memory: "1Gi"
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
-
-database:
-  url: "postgresql://prod-user:prod-password@prod-db:5432/prod-todo"
-```
-
-## Testing the Chart
-
-Run the following command to execute the chart's tests:
-
-```bash
-helm install test-release charts/todo-app
-helm test test-release
-```
-
-## Chart Structure
-
-```
-charts/todo-app/
-├── Chart.yaml
-├── values.yaml
-├── README.md
-├── templates/
-│   ├── _helpers.tpl
-│   ├── NOTES.txt
-│   ├── frontend-deployment.yaml
-│   ├── backend-deployment.yaml
-│   ├── frontend-service.yaml
-│   ├── backend-service.yaml
-│   ├── configmap.yaml
-│   ├── secrets.yaml
-│   ├── ingress.yaml
-│   └── tests/
-│       ├── test-frontend-deployment.yaml
-│       └── test-backend-deployment.yaml
-└── .helmignore
-```
 
 ## Maintainers
 

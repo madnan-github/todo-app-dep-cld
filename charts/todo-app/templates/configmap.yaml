@@ -10,6 +10,6 @@ data:
   # Backend configuration
   API_HOST: "0.0.0.0"
   API_PORT: {{ .Values.backend.service.port | quote }}
-  CORS_ORIGINS: {{ .Values.backend.cors.origins | default "http://localhost:3000" | quote }}
-  DEBUG: {{ .Values.backend.debug | default "false" | quote }}
-  ENVIRONMENT: {{ .Values.global.environment | default "development" | quote }}
+  CORS_ORIGINS: {{ .Values.backend.cors.origins | quote }}
+  DEBUG: {{ .Values.backend.debug | quote }}
+  ENVIRONMENT: {{ .Values.global.environment | quote }}
