@@ -1,0 +1,46 @@
+# AI-Generated Dockerfile for Next.js 15+ Application
+# Optimized for security, performance, and best practices
+
+# Build stage - separate for dependencies and application
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Build stage - compile the Next.js application
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN npm ci
+RUN npm run build
+
+# Production stage - minimal runtime
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Install minimal packages needed for health checks
+RUN apk add --no-cache curl dumb-init
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+# Copy built application and dependencies
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Use dumb-init to handle PID 1 properly
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]

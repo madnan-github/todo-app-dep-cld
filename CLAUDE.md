@@ -355,6 +355,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - N/A (this feature adds containerization, not storage) (006-docker-containerization)
 - N/A (Infrastructure as Code) + Helm 3, Minikube, Docker, Kubernetes (008-kubernetes-deployment)
 - N/A (Infrastructure deployment) (008-kubernetes-deployment)
+- N/A (DevOps tooling, shell scripts, configuration files) + kubectl-ai, kagent, Docker AI (Gordon), Kubernetes, Helm (009-ai-devops-tools-integration)
+- N/A (configuration files and manifests) (009-ai-devops-tools-integration)
 
 ### Phase I (Console App) - Completed
 - Python 3.13+
