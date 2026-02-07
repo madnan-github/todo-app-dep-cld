@@ -371,6 +371,20 @@ todo-app/
 ├── PRODUCTION-SETUP.md      # Production environment setup
 ├── DB_CONFIG.md             # Database configuration guide
 ├── AI_DEVOPS_INTEGRATION_SUMMARY.md # AI DevOps integration details
+├── tests/                   # Comprehensive test suite
+│   ├── test_api_endpoints.py    # API endpoint tests
+│   ├── test_mcp_functions.py    # MCP function tests
+│   ├── test_api_routes.py       # API route tests
+│   ├── test_middleware.py       # Middleware tests
+│   ├── test_auth.py             # Authentication tests
+│   ├── test_ai_agent.py         # AI agent tests
+│   ├── test_task_handler.py     # Task handler tests
+│   ├── test_config.py           # Configuration tests
+│   ├── test_app.py              # Application instance tests
+│   ├── test_environment.py      # Environment tests
+│   ├── run_tests.py             # Test runner script
+│   ├── requirements.txt         # Test dependencies
+│   └── README.md                # Test suite documentation
 ├── CLAUDE.md                # Claude Code instructions
 ├── AGENTS.md                # AI agent behavior specifications
 └── README.md                # This file
@@ -408,6 +422,28 @@ Advanced features use Kafka for event-driven architecture:
 - **Recurring Task Engine**: Auto-creation of recurring tasks
 - **Activity/Audit Log**: Complete history of all operations
 - **Real-time Sync**: Cross-client synchronization
+
+## Testing
+
+The application includes a comprehensive test suite located in the `tests/` directory:
+
+- **Unit Tests**: Test individual functions and components
+- **Integration Tests**: Test how components work together
+- **API Tests**: Test API endpoints and responses
+- **AI Agent Tests**: Test the AI functionality and MCP tools
+- **Middleware Tests**: Test rate limiting and other middleware
+
+To run the tests:
+```bash
+# Install test dependencies
+pip install -r tests/requirements.txt
+
+# Run all tests
+python -m pytest tests/
+
+# Run tests with coverage
+python -m pytest tests/ --cov=backend --cov-report=html
+```
 
 ## License
 
