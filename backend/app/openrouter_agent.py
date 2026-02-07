@@ -110,6 +110,11 @@ async def process_user_message(user_id: str, conversation_id: int, message: str)
     With fallback to direct handler if AI service fails
     """
     try:
+        # Check if API key is available
+        if not openrouter_api_key:
+            print("OpenRouter API key not found, falling back to direct handler")
+            return handle_task_command(user_id, message)
+        
         # Run the agent with the user's message with a timeout
         # Note: We need to inject the user_id into the context for tools to use
         enhanced_message = f"[User ID: {user_id}] {message}"
@@ -121,7 +126,7 @@ async def process_user_message(user_id: str, conversation_id: int, message: str)
                 input=enhanced_message,
                 run_config=config
             ),
-            timeout=10.0  # 10 second timeout
+            timeout=15.0  # Increased timeout to 15 seconds
         )
 
         # Extract tool calls from the result
@@ -131,8 +136,8 @@ async def process_user_message(user_id: str, conversation_id: int, message: str)
                 if hasattr(step, 'tool_calls') and step.tool_calls:
                     for tool_call in step.tool_calls:
                         tool_calls.append({
-                            "tool_name": tool_call.function_name,
-                            "result": tool_call.result if hasattr(tool_call, 'result') else "Executed"
+                            "tool_name": getattr(tool_call, 'function_name', 'unknown'),
+                            "result": getattr(tool_call, 'result', 'Executed') if hasattr(tool_call, 'result') else "Executed"
                         })
 
         return {
@@ -156,35 +161,37 @@ def process_user_message_sync(user_id: str, conversation_id: int, message: str) 
     Synchronous version for compatibility with existing code
     """
     try:
-        enhanced_message = f"[User ID: {user_id}] {message}"
+        # Check if API key is available
+        if not openrouter_api_key:
+            print("OpenRouter API key not found, falling back to direct handler")
+            return handle_task_command(user_id, message)
         
+        enhanced_message = f"[User ID: {user_id}] {message}"
+
         result = Runner.run_sync(
             starting_agent=agent,
             input=enhanced_message,
             run_config=config,
             max_turns=1  # Limit turns to avoid exceeding limits
         )
-        
+
         tool_calls = []
         if hasattr(result, 'steps') and result.steps:
             for step in result.steps:
                 if hasattr(step, 'tool_calls') and step.tool_calls:
                     for tool_call in step.tool_calls:
                         tool_calls.append({
-                            "tool_name": tool_call.function_name,
-                            "result": tool_call.result if hasattr(tool_call, 'result') else "Executed"
+                            "tool_name": getattr(tool_call, 'function_name', 'unknown'),
+                            "result": getattr(tool_call, 'result', 'Executed') if hasattr(tool_call, 'result') else "Executed"
                         })
-        
+
         return {
             "response": str(result.final_output),
             "tool_calls": tool_calls,
             "conversation_id": conversation_id
         }
-        
+
     except Exception as e:
         print(f"Error processing message with OpenRouter agent: {str(e)}")
-        return {
-            "response": "Sorry, I'm having trouble processing your request right now.",
-            "tool_calls": [],
-            "conversation_id": conversation_id
-        }
+        # Fallback to direct handler if AI service fails
+        return handle_task_command(user_id, message)

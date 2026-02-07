@@ -53,8 +53,14 @@ async def chat(user_id: str, request: ChatRequest, background_tasks: BackgroundT
         content=request.message
     )
 
-    # Process message with AI agent
-    result = await process_user_message(user_id, conversation_id, request.message)
+    try:
+        # Process message with AI agent
+        result = await process_user_message(user_id, conversation_id, request.message)
+    except Exception as e:
+        print(f"Error processing chat message: {str(e)}")
+        # Fallback to direct handler if there's an error
+        from .task_direct_handler import handle_task_command
+        result = handle_task_command(user_id, request.message)
 
     # Store AI response in database
     ai_message = Message(
