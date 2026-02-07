@@ -4,7 +4,14 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from .database import get_session
 from src.models import Message, Conversation, Task
-from .openrouter_agent import process_user_message
+try:
+    from app.openrouter_agent import process_user_message
+except ImportError:
+    # Fallback if openrouter agent is not available
+    async def process_user_message(user_id: str, conversation_id: int, message: str):
+        from app.task_direct_handler import handle_task_command
+        return handle_task_command(user_id, message)
+
 from .mcp_server import add_task, list_tasks, complete_task, delete_task, update_task
 import uuid
 

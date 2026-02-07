@@ -11,6 +11,8 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://neondb_owner:npg_sTVtWHiXo15L@ep-damp-wildflower-ada8vtmu-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-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}
+      - OPENROUTER_URL=https://openrouter.ai/api/v1/chat/completions
       - JWT_SECRET_KEY=dev-secret-key-change-in-production
       - JWT_ALGORITHM=HS256
       - API_HOST=0.0.0.0

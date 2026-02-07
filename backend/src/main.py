@@ -11,6 +11,7 @@ from src.routes.auth import router as auth_router
 from src.routes.tasks import router as tasks_router
 from src.routes.tags import router as tags_router
 from src.routes.better_auth import router as better_auth_router, router_v1 as better_auth_v1_router
+from app.routes import router as main_router
 from src.middleware import rate_limiter
 
 
@@ -172,3 +173,4 @@ app.include_router(tasks_router)
 app.include_router(tags_router)
 app.include_router(better_auth_router)  # Better Auth compatible endpoints at /api/auth
 app.include_router(better_auth_v1_router)  # Better Auth compatible endpoints at /api/v1
+app.include_router(main_router)  # Main routes including AI chat functionality

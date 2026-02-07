@@ -40,8 +40,11 @@ def list_tasks(user_id: str, status: str = "all") -> List[Dict[str, Any]]:
     """
     Retrieve tasks for a user, optionally filtered by status
     """
+    from .database import engine
+    from sqlmodel import Session
+
     # Get a database session and query tasks
-    with next(get_session()) as session:
+    with Session(engine) as session:
         # Build the query based on the status filter
         query = select(Task).where(Task.user_id == user_id)
 
@@ -73,8 +76,11 @@ def complete_task(user_id: str, task_id: int) -> Dict[str, Any]:
     """
     Mark a task as completed
     """
+    from .database import engine
+    from sqlmodel import Session
+
     # Get a database session and update the task
-    with next(get_session()) as session:
+    with Session(engine) as session:
         # Find the task for the specific user
         task = session.exec(
             select(Task).where(Task.id == task_id, Task.user_id == user_id)
@@ -108,8 +114,11 @@ def delete_task(user_id: str, task_id: int) -> Dict[str, Any]:
     """
     Remove a task
     """
+    from .database import engine
+    from sqlmodel import Session
+
     # Get a database session and delete the task
-    with next(get_session()) as session:
+    with Session(engine) as session:
         # Find the task for the specific user
         task = session.exec(
             select(Task).where(Task.id == task_id, Task.user_id == user_id)
@@ -141,8 +150,11 @@ def update_task(user_id: str, task_id: int, title: Optional[str] = None, descrip
     """
     Modify an existing task
     """
+    from .database import engine
+    from sqlmodel import Session
+
     # Get a database session and update the task
-    with next(get_session()) as session:
+    with Session(engine) as session:
         # Find the task for the specific user
         task = session.exec(
             select(Task).where(Task.id == task_id, Task.user_id == user_id)

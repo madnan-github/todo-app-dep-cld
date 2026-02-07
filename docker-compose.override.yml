@@ -1,18 +1,15 @@
+version: '3.8'
+
 services:
   backend:
     environment:
-      - DATABASE_URL=postgresql://neondb_owner:npg_sTVtWHiXo15L@ep-damp-wildflower-ada8vtmu-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - OPENROUTER_API_KEY=demo-key-for-local-development
       - JWT_SECRET_KEY=dev-secret-key-change-in-production
-      - JWT_ALGORITHM=HS256
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
-      - DEBUG=true
-      - CORS_ORIGINS=http://localhost:3000
-    depends_on: {}  # Remove all dependencies
+      - BETTER_AUTH_SECRET=dev-auth-secret-change-in-production
+      - DATABASE_URL=postgresql+asyncpg://todo_user:todo_password@postgres:5432/todo_app
+    restart: unless-stopped
 
   frontend:
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
-      - NODE_ENV=development
-    depends_on:
-      - backend
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    restart: unless-stopped
