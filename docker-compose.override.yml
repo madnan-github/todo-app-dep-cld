@@ -6,10 +6,18 @@ services:
       - OPENROUTER_API_KEY=demo-key-for-local-development
       - JWT_SECRET_KEY=dev-secret-key-change-in-production
       - BETTER_AUTH_SECRET=dev-auth-secret-change-in-production
-      - DATABASE_URL=postgresql+asyncpg://todo_user:todo_password@postgres:5432/todo_app
+      - DATABASE_URL=postgresql://neondb_owner:npg_sTVtWHiXo15L@ep-damp-wildflower-ada8vtmu-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require
     restart: unless-stopped
+    # Remove dependency on postgres since we're using external NeonDB
+    depends_on: []
 
   frontend:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     restart: unless-stopped
+
+  # Remove the postgres service since we're using NeonDB
+  postgres:
+    extends:
+      service: postgres
+    profiles: ["disable"]

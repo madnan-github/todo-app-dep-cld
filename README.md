@@ -29,7 +29,7 @@ A modern, full-stack AI-powered todo application built with Next.js 15, FastAPI,
 ### Backend
 - **FastAPI** (Python 3.13+)
 - **SQLModel** for database ORM
-- **PostgreSQL** (Neon serverless)
+- **PostgreSQL** (Local or Neon serverless)
 - **JWT** for authentication
 
 ### AI & Tools
@@ -39,6 +39,7 @@ A modern, full-stack AI-powered todo application built with Next.js 15, FastAPI,
 
 ### Cloud & Infrastructure
 - **Docker** - Containerization
+- **NeonDB** - Serverless PostgreSQL for cloud deployment
 - **Kubernetes** - Orchestration (Minikube, AKS, GKE, DOKS)
 - **Helm Charts** - Package management
 - **Dapr** - Distributed Application Runtime
@@ -288,6 +289,27 @@ This application leverages Dapr (Distributed Application Runtime) for cloud-nati
 5. Configure environment variables
 6. Deploy
 
+### Local PostgreSQL Deployment
+
+1. Use the default configuration to run with local PostgreSQL:
+   ```bash
+   docker-compose up -d
+   ```
+2. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+
+### NeonDB Deployment
+
+1. To use NeonDB instead of local PostgreSQL, use the neon configuration:
+   ```bash
+   docker-compose -f docker-compose.neon.yml up -d
+   ```
+2. The application will connect to NeonDB and store data in the cloud database
+3. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+
 ### Local Kubernetes (Minikube)
 
 1. Install Minikube and kubectl
@@ -342,10 +364,12 @@ todo-app/
 │   ├── service.yaml         # Service definitions
 │   └── ingress.yaml         # Ingress configuration
 ├── .specify/                 # Spec-Kit configuration
-├── docker-compose.yml       # Docker Compose configuration
+├── docker-compose.yml       # Docker Compose configuration (local PostgreSQL)
+├── docker-compose.neon.yml  # Docker Compose configuration (NeonDB)
 ├── kubectl-ai-simulated-output.yaml # AI-assisted Kubernetes examples
 ├── DEPLOYMENT.md            # Detailed deployment instructions
 ├── PRODUCTION-SETUP.md      # Production environment setup
+├── DB_CONFIG.md             # Database configuration guide
 ├── AI_DEVOPS_INTEGRATION_SUMMARY.md # AI DevOps integration details
 ├── CLAUDE.md                # Claude Code instructions
 ├── AGENTS.md                # AI agent behavior specifications
