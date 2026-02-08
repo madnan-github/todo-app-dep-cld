@@ -26,28 +26,33 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
-          npm install -g serve &&
-          echo '<!DOCTYPE html>
-          <html>
-          <head>
-              <title>TaskFlow Frontend</title>
-          </head>
-          <body>
-              <div id="root">
-                  <h1>TaskFlow Application</h1>
-                  <p>Frontend is running with Dapr integration</p>
-                  <p>Backend API is available at: http://taskflow-backend-service:80</p>
-              </div>
-          </body>
-          </html>' > index.html &&
-          serve -s . -l 3000
+          apk add --no-cache python3 make g++ && 
+          cd /app && 
+          npm install && 
+          npm run build && 
+          npm start
+        workingDir: /app
         ports:
         - containerPort: 3000
+        # No volume mounts needed as the application is built into the image
         env:
         - name: DAPR_HTTP_PORT
           value: "3500"
         - name: NEXT_PUBLIC_API_BASE_URL
           value: "http://taskflow-backend-service:80"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      # No volumes needed as the application is built into the image
 ---
 apiVersion: v1
 kind: Service
