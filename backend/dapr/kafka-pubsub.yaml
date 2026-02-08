@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "kafka:9092"  # This should match your Kafka broker address
+  - name: consumerGroup
+    value: "taskflow-consumer-group"
+  - name: clientID
+    value: "taskflow-client"
+  - name: authType
+    value: "none"

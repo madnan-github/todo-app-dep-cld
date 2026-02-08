@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field, field_validator
-from src.models import PriorityEnum
+from src.models import PriorityEnum, RecurrencePatternEnum
 
 
 # ============================================================================
@@ -92,6 +92,11 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     """Schema for creating a task."""
     tag_ids: Optional[List[int]] = None
+    # Advanced features
+    due_date: Optional[datetime] = None
+    is_recurring: bool = False
+    recurrence_pattern: Optional[RecurrencePatternEnum] = None
+    recurrence_interval: Optional[int] = Field(default=1, ge=1)  # Number of units (days, weeks, months, years)
 
 
 class TaskUpdate(BaseModel):
@@ -101,6 +106,13 @@ class TaskUpdate(BaseModel):
     completed: Optional[bool] = None
     priority: Optional[PriorityEnum] = None
     tag_ids: Optional[List[int]] = None
+    # Advanced features
+    due_date: Optional[datetime] = None
+    reminder_sent: Optional[bool] = None
+    is_recurring: Optional[bool] = None
+    recurrence_pattern: Optional[RecurrencePatternEnum] = None
+    recurrence_interval: Optional[int] = Field(default=None, ge=1)  # Number of units (days, weeks, months, years)
+    next_occurrence: Optional[datetime] = None
 
 
 class TaskResponse(TaskBase):
@@ -111,6 +123,14 @@ class TaskResponse(TaskBase):
     created_at: datetime
     updated_at: datetime
     tags: List[TagResponse] = []
+    # Advanced features
+    due_date: Optional[datetime] = None
+    reminder_sent: bool = False
+    is_recurring: bool = False
+    recurrence_pattern: Optional[RecurrencePatternEnum] = None
+    recurrence_interval: Optional[int] = 1
+    next_occurrence: Optional[datetime] = None
+    parent_task_id: Optional[int] = None
 
     class Config:
         from_attributes = True

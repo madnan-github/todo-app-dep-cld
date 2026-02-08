@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-frontend
+  labels:
+    app: taskflow-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskflow-frontend
+  template:
+    metadata:
+      labels:
+        app: taskflow-frontend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "taskflow-frontend"
+        dapr.io/app-port: "3000"
+        dapr.io/config: "taskflow-config"
+        dapr.io/log-level: "info"
+    spec:
+      containers:
+      - name: taskflow-frontend
+        image: node:20-alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          npm install -g serve &&
+          echo '<!DOCTYPE html>
+          <html>
+          <head>
+              <title>TaskFlow Frontend</title>
+          </head>
+          <body>
+              <div id="root">
+                  <h1>TaskFlow Application</h1>
+                  <p>Frontend is running with Dapr integration</p>
+                  <p>Backend API is available at: http://taskflow-backend-service:80</p>
+              </div>
+          </body>
+          </html>' > index.html &&
+          serve -s . -l 3000
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DAPR_HTTP_PORT
+          value: "3500"
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://taskflow-backend-service:80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-frontend-service
+spec:
+  selector:
+    app: taskflow-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

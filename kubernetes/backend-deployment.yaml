@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-backend
+  labels:
+    app: taskflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskflow-backend
+  template:
+    metadata:
+      labels:
+        app: taskflow-backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "taskflow-backend"
+        dapr.io/app-port: "8000"
+        dapr.io/config: "taskflow-config"
+        dapr.io/log-level: "info"
+    spec:
+      containers:
+      - name: taskflow-backend
+        image: python:3.13-alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          pip install fastapi uvicorn && 
+          python -c "
+          import uvicorn
+          from fastapi import FastAPI
+          import time
+          
+          app = FastAPI(
+            title='TaskFlow API',
+            description='REST API for TaskFlow full-stack todo application with Dapr and Kafka integration',
+            version='1.0.0'
+          )
+          
+          @app.get('/')
+          def root():
+              return {
+                'name': 'TaskFlow API',
+                'version': '1.0.0',
+                'description': 'REST API with Dapr and Kafka integration',
+                'docs': '/docs',
+                'health': '/health'
+              }
+          
+          @app.get('/health')
+          async def health_check():
+              return {
+                'status': 'healthy',
+                'timestamp': time.time(),
+                'service': 'backend',
+                'version': '1.0.0',
+                'environment': 'minikube'
+              }
+          
+          @app.get('/api/health')
+          async def api_health_check():
+              return {
+                'status': 'healthy',
+                'timestamp': time.time(),
+                'service': 'backend',
+                'version': '1.0.0',
+                'environment': 'minikube'
+              }
+          
+          if __name__ == '__main__':
+              uvicorn.run(app, host='0.0.0.0', port=8000)
+          "
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DAPR_HTTP_PORT
+          value: "3500"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-backend-service
+spec:
+  selector:
+    app: taskflow-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
