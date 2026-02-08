@@ -13,6 +13,20 @@ from src.routes.tags import router as tags_router
 from src.routes.better_auth import router as better_auth_router, router_v1 as better_auth_v1_router
 from app.routes import router as main_router
 from src.middleware import rate_limiter
+import asyncio
+import logging
+
+# Import Kafka and Dapr components
+from src.kafka_producer import KafkaTaskProducer
+from src.background_tasks import BackgroundTaskManager
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Global variables to hold Kafka producer and background task manager
+kafka_producer = None
+background_manager = None
 
 
 @asynccontextmanager
@@ -20,6 +34,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan events."""
     import sys
     import os
+
+    global kafka_producer, background_manager
 
     # Startup: Initialize database tables
     print(f"Starting TaskFlow API in {settings.environment} mode", flush=True)
@@ -45,17 +61,59 @@ async def lifespan(app: FastAPI):
         import traceback
         traceback.print_exc()
 
+    # Initialize Kafka producer
+    try:
+        print("Initializing Kafka producer...", flush=True)
+        sys.stdout.flush()
+        kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+        kafka_producer = KafkaTaskProducer(bootstrap_servers=kafka_bootstrap_servers)
+        await kafka_producer.start()
+        print("✓ Kafka producer initialized successfully", flush=True)
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"✗ Warning: Kafka producer initialization failed: {e}", flush=True)
+        sys.stdout.flush()
+        print("App will start but Kafka events will not be published", flush=True)
+        sys.stdout.flush()
+
+    # Initialize background task manager
+    try:
+        print("Initializing background task manager...", flush=True)
+        sys.stdout.flush()
+        background_manager = BackgroundTaskManager(kafka_producer)
+        await background_manager.start()
+        print("✓ Background task manager initialized successfully", flush=True)
+        sys.stdout.flush()
+    except Exception as e:
+        print(f"✗ Warning: Background task manager initialization failed: {e}", flush=True)
+        sys.stdout.flush()
+        print("App will start but background tasks will not run", flush=True)
+        sys.stdout.flush()
+
     print("✓ Server startup complete", flush=True)
     sys.stdout.flush()
     yield
-    # Shutdown: Cleanup if needed
+    
+    # Shutdown: Cleanup
     print("Shutting down server...", flush=True)
+    
+    # Stop background task manager
+    if background_manager:
+        await background_manager.stop()
+        print("✓ Background task manager stopped", flush=True)
+    
+    # Stop Kafka producer
+    if kafka_producer:
+        await kafka_producer.stop()
+        print("✓ Kafka producer stopped", flush=True)
+
+    print("✓ Server shutdown complete", flush=True)
 
 
 # Create FastAPI application
 app = FastAPI(
     title="TaskFlow API",
-    description="REST API for TaskFlow full-stack todo application",
+    description="REST API for TaskFlow full-stack todo application with Dapr and Kafka integration",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -117,16 +175,22 @@ async def health_check_legacy():
     except Exception as e:
         print(f"Database health check failed: {e}")
 
+    # Check Kafka producer status
+    kafka_status = "disconnected"
+    if kafka_producer and kafka_producer.started:
+        kafka_status = "connected"
+
     return {
         "status": "ok",
         "database": db_status,
+        "kafka": kafka_status,
         "environment": settings.environment
     }
 
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint with database verification for Kubernetes."""
+    """Health check endpoint with database and Kafka verification for Kubernetes."""
     # For basic health, we just need to verify the service is running
     # Database connectivity is optional for basic health status
     db_status = "disconnected"
@@ -139,12 +203,18 @@ async def health_check():
         print(f"Database health check failed: {e}")
         # Don't treat database disconnection as fatal for health check
 
+    # Check Kafka producer status
+    kafka_status = "disconnected"
+    if kafka_producer and kafka_producer.started:
+        kafka_status = "connected"
+
     health_status = {
         "status": "healthy",  # Service is running
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "service": "backend",
         "version": "1.0.0",
         "database": db_status,
+        "kafka": kafka_status,
         "environment": settings.environment
     }
 
@@ -163,6 +233,7 @@ async def root():
     return {
         "name": "TaskFlow API",
         "version": "1.0.0",
+        "description": "REST API with Dapr and Kafka integration",
         "docs": "/docs",
         "health": "/health",
     }

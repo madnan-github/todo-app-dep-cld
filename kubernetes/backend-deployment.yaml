@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-backend
+  labels:
+    app: taskflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskflow-backend
+  template:
+    metadata:
+      labels:
+        app: taskflow-backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "taskflow-backend"
+        dapr.io/app-port: "8000"
+        dapr.io/config: "taskflow-config"
+        dapr.io/log-level: "info"
+    spec:
+      containers:
+      - name: taskflow-backend
+        image: python:3.13-alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          apk add --no-cache gcc musl-dev libffi-dev && 
+          pip install uv && 
+          cd /app && 
+          python -m uv pip install --system -r pyproject.toml && 
+          python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+        workingDir: /app
+        ports:
+        - containerPort: 8000
+        # No volume mounts needed as the application is built into the image
+        env:
+        - name: DATABASE_URL
+          value: "sqlite:///./taskflow.db"
+        - name: DAPR_HTTP_PORT
+          value: "3500"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "taskflow-kafka-kafka-pool-0.taskflow-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      # No volumes needed as the application is built into the image
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-backend-service
+spec:
+  selector:
+    app: taskflow-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer

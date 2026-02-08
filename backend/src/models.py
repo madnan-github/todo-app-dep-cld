@@ -1,8 +1,9 @@
 """SQLModel database entities."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, TYPE_CHECKING, List
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Column, Interval
 
 if TYPE_CHECKING:
     pass
@@ -13,6 +14,14 @@ class PriorityEnum(str, Enum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
+
+class RecurrencePatternEnum(str, Enum):
+    """Recurrence patterns for recurring tasks."""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
 
 
 # Define TaskTag first since it's used as link_model
@@ -49,6 +58,15 @@ class Task(SQLModel, table=True):
     priority: PriorityEnum = Field(default=PriorityEnum.MEDIUM, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Advanced features fields
+    due_date: Optional[datetime] = Field(default=None)
+    reminder_sent: bool = Field(default=False)
+    is_recurring: bool = Field(default=False)
+    recurrence_pattern: Optional[RecurrencePatternEnum] = Field(default=None)
+    recurrence_interval: Optional[int] = Field(default=None)  # Number of units (days, weeks, months, years)
+    next_occurrence: Optional[datetime] = Field(default=None)  # When the next occurrence is due
+    parent_task_id: Optional[int] = Field(default=None, foreign_key="task.id")  # For recurring tasks
 
     # Relationships
     user: "User" = Relationship(back_populates="tasks")
@@ -56,6 +74,11 @@ class Task(SQLModel, table=True):
         back_populates="tasks",
         link_model=TaskTag
     )
+    child_tasks: list["Task"] = Relationship(
+        back_populates="parent_task",
+        sa_relationship_kwargs={"remote_side": "Task.id"}
+    )  # For recurring tasks - links to next occurrence
+    parent_task: "Task" = Relationship(back_populates="child_tasks")
 
 
 class Tag(SQLModel, table=True):
@@ -100,3 +123,15 @@ class Message(SQLModel, table=True):
 
     # Relationship to conversation
     conversation: "Conversation" = Relationship(back_populates="messages")
+
+
+class TaskEvent(SQLModel, table=True):
+    """Event entity for tracking task-related events for Kafka/Event streaming."""
+    __table_args__ = {'extend_existing': True}
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    task_id: int = Field(foreign_key="task.id", nullable=False, index=True)
+    event_type: str = Field(max_length=50, index=True)  # create, update, delete, complete, reminder, recurring
+    payload: str = Field(max_length=5000)  # JSON string of event details
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    processed: bool = Field(default=False, index=True)
